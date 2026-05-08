@@ -6,12 +6,11 @@ import random
 import importlib
 
 import sys
-sys.path.append ('functions')
 
-import utils as mf
+import functions.utils as mf
 importlib.reload(mf) 
 
-from rnn_module import AmmoniaRNN
+from functions.rnn_module import AmmoniaRNN
 
 DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
@@ -57,7 +56,7 @@ num_layers = 1
 nonlinearity = "relu"
 bidirectional = True
 response = "e_cum"
-hidden_size = 512 
+hidden_size = 512
 
 output_size = 1
 
@@ -68,13 +67,10 @@ cat_dims = [max (data[x]) + 1 for x in cat_vars]
 embedding_dims = [8] * len (cat_vars)  
 
 input_size = len (cont_vars) + len (cat_vars)
-# ------------------------------------------------------------------------------------------
-
-
-
 
 # training ---------------------------------------------------------------------------------
 l = []
+l_grad = []
 list_predictions = []
 
 for seed in range (5):
@@ -98,7 +94,7 @@ for seed in range (5):
     
     num_epochs = 5
     learning_rate = 5e-4
-    list_out_fc1_before_relu, list_out_fc1_after_relu, list_out_fc2_before_relu, list_out_fc2_after_relu = mf.train_model (model, num_epochs, learning_rate, x_train, y_train, DEVICE)
+    list_out_fc1_before_relu, list_out_fc1_after_relu, list_out_fc2_before_relu, list_out_fc2_after_relu, list_grad_norm, list_grad_norm_rnn, *_ = mf.train_model (model, num_epochs, learning_rate, x_train, y_train, DEVICE)
 
     df_tmp = pd.concat ([
         pd.DataFrame ({"position" : "sum (abs (h)) fc1 before relu", "value" : list_out_fc1_before_relu, "seed": seed}).reset_index(),
@@ -108,6 +104,12 @@ for seed in range (5):
     ])
 
     l.append (df_tmp)
+
+    df_grad = pd.concat ([
+        pd.DataFrame ({"position": "total grad norm",   "value": list_grad_norm,     "seed": seed}).reset_index(),
+        pd.DataFrame ({"position": "RNN grad norm",     "value": list_grad_norm_rnn, "seed": seed}).reset_index(),
+    ])
+    l_grad.append (df_grad)
 
     data_predictions = mf.predict_emissions (data_origin, model, pmids_train, cont_vars, cat_vars, response, DEVICE)
 
@@ -133,4 +135,14 @@ g.map_dataframe (sns.scatterplot, x = "index", y = "value")
 g.add_legend()
 
 g.savefig("results/sum_abs_h_all_variables.png", dpi=200, bbox_inches="tight")
+
+df_plot3 = pd.concat (l_grad)
+
+g = sns.FacetGrid (df_plot3, col = "seed", hue = "position", col_wrap = 5)
+g.map_dataframe (sns.lineplot, x = "index", y = "value")
+g.add_legend()
+g.set(yscale="log")
+g.set_axis_labels("Training step", "Gradient norm (log)")
+
+g.savefig("results/grad_norm_all_variables.png", dpi=200, bbox_inches="tight")
 # ------------------------------------------------------------------------------------------

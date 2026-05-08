@@ -73,45 +73,74 @@ def make_mini_batches (x_train, y_train, batch_size):
 
 
 
-def train_model (model, num_epochs, learning_rate, x_train, y_train, DEVICE, batch_size = 32):
-       
+def _grad_norm(model, tag=None):
+    total = 0.0
+    for name, p in model.named_parameters():
+        if p.grad is None:
+            continue
+        if tag is not None and tag not in name:
+            continue
+        g = p.grad.detach()
+        if not torch.isfinite(g).all():
+            return float("inf")
+        total += g.norm().item() ** 2
+    return total ** 0.5
+
+
+def train_model (model, num_epochs, learning_rate, x_train, y_train, DEVICE, x_val=None, batch_size = 32):
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    
-    model.train()  
+
+    model.train()
 
     list_out_fc1_before_relu = []
     list_out_fc1_after_relu = []
     list_out_fc2_before_relu = []
     list_out_fc2_after_relu = []
-    
+    list_grad_norm     = []   # total gradient norm per step
+    list_grad_norm_rnn = []   # RNN-weights gradient norm per step
+
     for epoch in range(num_epochs):
-        
+
         mini_batches_x, mini_batches_y = make_mini_batches (x_train, y_train, batch_size)
-        all_predictions = []
-        all_target_train = []
 
         n_mini_batches = len (mini_batches_x)
 
         for i in range(n_mini_batches):
 
-            outputs, packed_y = model(mini_batches_x[i], mini_batches_y[i])  
-            
-            loss = torch.mean ((outputs - packed_y[0]) ** 2)    
+            outputs, packed_y = model(mini_batches_x[i], mini_batches_y[i])
 
-            with torch.no_grad():
+            loss = torch.mean ((outputs - packed_y[0]) ** 2)
 
-                _, out_fc1_before_relu, out_fc1_after_relu, out_fc2_before_relu, out_fc2_after_relu = model ([x_train[0]])
-                    
-            list_out_fc1_before_relu.append (out_fc1_before_relu.item())
-            list_out_fc1_after_relu.append (out_fc1_after_relu.item())
-            list_out_fc2_before_relu.append (out_fc2_before_relu.item())
-            list_out_fc2_after_relu.append (out_fc2_after_relu.item())
-            
             optimizer.zero_grad()
             loss.backward()
+
+            # gradient norms after backward, before step — classic explosion diagnostic
+            gn     = _grad_norm(model)
+            gn_rnn = _grad_norm(model, "rnn")
+            list_grad_norm.append    (gn     if np.isfinite(gn)     else float("inf"))
+            list_grad_norm_rnn.append(gn_rnn if np.isfinite(gn_rnn) else float("inf"))
+
             optimizer.step()
 
-    return (list_out_fc1_before_relu, list_out_fc1_after_relu, list_out_fc2_before_relu, list_out_fc2_after_relu)
+            with torch.no_grad():
+                # Evaluate on a batch (not just one sequence) so the signal is representative
+                _, out_fc1_before_relu, out_fc1_after_relu, out_fc2_before_relu, out_fc2_after_relu, _ = model (x_train[:32])
+
+            list_out_fc1_before_relu.append (out_fc1_before_relu.item())
+            list_out_fc1_after_relu.append  (out_fc1_after_relu.item())
+            list_out_fc2_before_relu.append (out_fc2_before_relu.item())
+            list_out_fc2_after_relu.append  (out_fc2_after_relu.item())
+
+    model.eval()
+    with torch.no_grad():
+        _, _, _, _, _, h_n = model(x_train[:32])
+        h_T      = torch.cat([h_n[0], h_n[1]], dim=-1)
+        h_T_norm = h_T.norm(dim=-1).mean().item()
+        rnn_dead = (h_T.abs() < 1e-6).float().mean().item()
+
+    return (list_out_fc1_before_relu, list_out_fc1_after_relu, list_out_fc2_before_relu, list_out_fc2_after_relu,
+            list_grad_norm, list_grad_norm_rnn, h_T_norm, rnn_dead)
 
 
 

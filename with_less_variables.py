@@ -98,7 +98,7 @@ for seed in range (5):
     
     num_epochs = 5
     learning_rate = 5e-4
-    list_out_fc1_before_relu, list_out_fc1_after_relu, list_out_fc2_before_relu, list_out_fc2_after_relu = mf.train_model (model, num_epochs, learning_rate, x_train, y_train, DEVICE)
+    list_out_fc1_before_relu, list_out_fc1_after_relu, list_out_fc2_before_relu, list_out_fc2_after_relu, *_ = mf.train_model (model, num_epochs, learning_rate, x_train, y_train, DEVICE)
 
     df_tmp = pd.concat ([
         pd.DataFrame ({"position" : "sum (abs (h)) fc1 before relu", "value" : list_out_fc1_before_relu, "seed": seed}).reset_index(),

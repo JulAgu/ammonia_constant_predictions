@@ -66,9 +66,9 @@ class AmmoniaRNN(nn.Module):
             packed_y = pack_sequence(sorted_y, enforce_sorted=False)
 
         
-        h, _ = self.rnn(packed_x)
+        h_packed, h_n = self.rnn(packed_x)
 
-        h = h[0]
+        h = h_packed[0]
 
         out = self.fc1(h)
         out_fc1_before_relu = torch.sum (torch.abs (out))
@@ -91,4 +91,4 @@ class AmmoniaRNN(nn.Module):
 
         else :
 
-            return out, out_fc1_before_relu, out_fc1_after_relu, out_fc2_before_relu, out_fc2_after_relu
+            return out, out_fc1_before_relu, out_fc1_after_relu, out_fc2_before_relu, out_fc2_after_relu, h_n
