@@ -14,7 +14,7 @@ The root cause is **dying ReLU** — a forward-pass phenomenon where neurons get
 
 For a vanilla RNN cell with nonlinearity $f$:
 
-$$h_t = f\!\left(W_h\, h_{t-1} + W_x\, x_t + b\right)$$
+$$h_t = f\left(W_h\, h_{t-1} + W_x\, x_t + b\right)$$
 
 With $f = \mathrm{ReLU}$, any neuron $i$ whose pre-activation is non-positive goes to 0:
 
@@ -22,7 +22,7 @@ $$h_t^{(i)} = 0 \quad \text{if} \quad \left[W_h\, h_{t-1} + W_x\, x_t + b\right]
 
 Once dead, the neuron's contribution to the next step vanishes:
 
-$$h_{t+1}^{(i)} = \mathrm{ReLU}\!\left(\underbrace{[W_h]_i \cdot 0}_{=\,0} + [W_x]_i\cdot x_{t+1} + b_i\right)$$
+$$h_{t+1}^{(i)} = \mathrm{ReLU}\left(\underbrace{[W_h]_i \cdot 0}_{=\,0} + [W_x]_i\cdot x_{t+1} + b_i\right)$$
 
 It can only revive if $[W_x]_i \cdot x_{t+1} + b_i > 0$, which becomes increasingly unlikely as weights are updated to fit a dead signal. Neurons accumulate at zero over the sequence.
 
@@ -48,9 +48,9 @@ The model predicts the same constant $b_3$ for every input, this is $\mathrm{std
 
 Because dead neurons have zero derivative, gradients cannot flow back through them during Backpropagation Through Time (BPTT - See https://en.wikipedia.org/wiki/Backpropagation_through_time):
 
-$$\frac{\partial h_t}{\partial h_{t-1}} = \mathrm{diag}\!\left(\mathbf{1}\left[W_h h_{t-1} + W_x x_t + b > 0\right]\right) W_h$$
+$$\frac{\partial h_t}{\partial h_{t-1}} = \mathrm{diag}\left(\mathbf{1}\left[W_h h_{t-1} + W_x x_t + b > 0\right]\right) W_h$$
 
-Write $D_t = \mathrm{diag}\!\left(\mathbf{1}[a_t > 0]\right)$ for the gate matrix at step $t$. BPTT computes the gradient of the loss with respect to an earlier hidden state $h_{t-k}$ by chaining $k$ Jacobians:
+Write $D_t = \mathrm{diag}\left(\mathbf{1}[a_t > 0]\right)$ for the gate matrix at step $t$. BPTT computes the gradient of the loss with respect to an earlier hidden state $h_{t-k}$ by chaining $k$ Jacobians:
 
 $$\frac{\partial \mathcal{L}}{\partial h_{t-k}} = \frac{\partial \mathcal{L}}{\partial h_t} \prod_{j=0}^{k-1} D_{t-j}\, W_h$$
 

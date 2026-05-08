@@ -155,9 +155,7 @@ for nl in ["relu", "tanh"]:
 for nl in ["relu", "tanh"]:
     mean_curve = np.nanmean([r["fc2_hist"] for r in results[nl]], axis=0)
     ax.plot(epochs_x, mean_curve, color=colors[nl], lw=3.5, label=f"{nl}  (mean)")
-ax.set_title("fc2 after ReLU signal over training\n"
-             "thin = individual seeds | thick = mean across seeds\n"
-             "relu -> 0 every time | tanh -> alive every time")
+ax.set_title("fc2 after ReLU signal over training")
 ax.set_xlabel("Epoch"); ax.set_ylabel("Mean |fc2 output|"); ax.legend(fontsize=10)
 
 # Panel 2 — std(predictions) per seed
@@ -167,9 +165,7 @@ tanh_std = [r["std_pred"] for r in results["tanh"]]
 ax.bar(seeds_x - width/2, relu_std, width, color=colors["relu"], label="relu", alpha=0.85)
 ax.bar(seeds_x + width/2, tanh_std, width, color=colors["tanh"], label="tanh", alpha=0.85)
 ax.axhline(0, color="black", lw=0.8, ls="--")
-ax.set_title("Std of predictions per shuffle seed\n"
-             "relu = 0 for ALL seeds (constant output)\n"
-             "tanh > 0 for ALL seeds (varied output, learning)")
+ax.set_title("Std of predictions per shuffle seed")
 ax.set_xlabel("Shuffle seed"); ax.set_ylabel("Std(predictions)")
 ax.set_xticks(seeds_x); ax.legend(fontsize=10)
 
@@ -179,9 +175,7 @@ relu_dead = [r["rnn_dead"] * 100 for r in results["relu"]]
 tanh_dead = [r["rnn_dead"] * 100 for r in results["tanh"]]
 ax.bar(seeds_x - width/2, relu_dead, width, color=colors["relu"], label="relu", alpha=0.85)
 ax.bar(seeds_x + width/2, tanh_dead, width, color=colors["tanh"], label="tanh", alpha=0.85)
-ax.set_title("Dead RNN neurons per shuffle seed  (%)\n"
-             "relu: h_t = 0 for many neurons -> signal lost upstream\n"
-             "tanh: h_t always non-zero -> full gradient flow")
+ax.set_title("Dead RNN neurons per shuffle seed (%)")
 ax.set_xlabel("Shuffle seed"); ax.set_ylabel("h_t = 0  (%)")
 ax.set_xticks(seeds_x); ax.legend(fontsize=10)
 ax.set_ylim(0, 100)
@@ -192,7 +186,7 @@ relu_h_T = [r["h_T_norm"] for r in results["relu"]]
 tanh_h_T = [r["h_T_norm"] for r in results["tanh"]]
 ax.bar(seeds_x - width/2, relu_h_T, width, color=colors["relu"], label="relu", alpha=0.85)
 ax.bar(seeds_x + width/2, tanh_h_T, width, color=colors["tanh"], label="tanh", alpha=0.85)
-ax.set_title("Mean ||h_T||₂ on val set after training\nrelu: h_T collapsed  |  tanh: h_T alive")
+ax.set_title("Mean ||h_T||₂ on val set after training")
 ax.set_xlabel("Shuffle seed"); ax.set_ylabel("Mean ||h_T||₂")
 ax.set_xticks(seeds_x); ax.legend(fontsize=10)
 

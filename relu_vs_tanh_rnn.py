@@ -101,21 +101,21 @@ gs = gridspec.GridSpec(2, 4, figure=fig, hspace=0.45, wspace=0.35)
 ax = fig.add_subplot(gs[0, 0])
 r = results["relu"]["preds"]
 ax.scatter(r["e_cum_origin"], r["prediction_ecum"], alpha=0.5, s=12, color=colors["relu"])
-ax.set_title("relu RNN — obs vs pred\nHorizontal line = same constant for all inputs")
+ax.set_title("relu RNN - obs vs pred")
 ax.set_xlabel("e_cum observed"); ax.set_ylabel("e_cum predicted")
 
 # Panel 2 — obs vs pred (tanh)
 ax = fig.add_subplot(gs[0, 1])
 r = results["tanh"]["preds"]
 ax.scatter(r["e_cum_origin"], r["prediction_ecum"], alpha=0.5, s=12, color=colors["tanh"])
-ax.set_title("tanh RNN — obs vs pred\nVaried predictions = model is learning")
+ax.set_title("tanh RNN - obs vs pred")
 ax.set_xlabel("e_cum observed"); ax.set_ylabel("e_cum predicted")
 
 # Panel 3 — fc2 after relu (the kill-shot metric)
 ax = fig.add_subplot(gs[0, 2])
 for nl, h in results.items():
     ax.plot(h["fc2_after"], color=colors[nl], label=nl, lw=2.5)
-ax.set_title("sum |h| fc2 after ReLU  — the smoking gun\nrelu: collapses to 0  →  fc3 input = 0  →  constant pred\ntanh: stays non-zero  →  signal flows  →  model learns")
+ax.set_title("sum |h| fc2 after ReLU")
 ax.set_xlabel("Training step"); ax.set_ylabel("sum |fc2 output|"); ax.legend(fontsize=10)
 
 # Panel 4 — full signal cascade (relu)
@@ -124,7 +124,7 @@ ax.plot(results["relu"]["fc1_before"], label="fc1 before relu", lw=2)
 ax.plot(results["relu"]["fc1_after"],  label="fc1 after relu",  lw=2)
 ax.plot(results["relu"]["fc2_before"], label="fc2 before relu", lw=2)
 ax.plot(results["relu"]["fc2_after"],  label="fc2 after relu",  lw=2)
-ax.set_title("relu RNN — signal cascade\nfc2 after relu kills all signal from step 1")
+ax.set_title("relu RNN - signal cascade")
 ax.set_xlabel("Training step"); ax.set_ylabel("sum |h|"); ax.legend(fontsize=8)
 
 # Panel 5 — full signal cascade (tanh)
@@ -133,7 +133,7 @@ ax.plot(results["tanh"]["fc1_before"], label="fc1 before relu", lw=2)
 ax.plot(results["tanh"]["fc1_after"],  label="fc1 after relu",  lw=2)
 ax.plot(results["tanh"]["fc2_before"], label="fc2 before relu", lw=2)
 ax.plot(results["tanh"]["fc2_after"],  label="fc2 after relu",  lw=2)
-ax.set_title("tanh RNN — signal cascade\nAll layers carry signal throughout training")
+ax.set_title("tanh RNN - signal cascade")
 ax.set_xlabel("Training step"); ax.set_ylabel("sum |h|"); ax.legend(fontsize=8)
 
 # Panel 6 — gradient norms
@@ -143,7 +143,7 @@ for nl, h in results.items():
     gnorm_rnn = [v if np.isfinite(v) else np.nan for v in h["gnorm_rnn"]]
     ax.semilogy(gnorm,     color=colors[nl], lw=2,   label=f"{nl} — total")
     ax.semilogy(gnorm_rnn, color=colors[nl], lw=1.5, ls="--", label=f"{nl} — RNN only")
-ax.set_title("Gradient norms (log)\nrelu RNN norm collapses; tanh stays active throughout")
+ax.set_title("Gradient norms (log)")
 ax.set_xlabel("Training step"); ax.set_ylabel("||grad||  (log)"); ax.legend(fontsize=8)
 
 # Panel 7 — dead terminal hidden neurons after training
@@ -152,7 +152,7 @@ nls  = list(results.keys())
 vals = [results[nl]["rnn_dead"] * 100 for nl in nls]
 cols = [colors[nl] for nl in nls]
 ax.bar(nls, vals, color=cols, alpha=0.85, width=0.4)
-ax.set_title("Dead neurons in h_T after training  (%)\n|h_T| < 1e-6  →  neuron contributes nothing\nrelu: many dead  |  tanh: none dead")
+ax.set_title("Dead neurons in h_T after training (%)\n")
 ax.set_ylabel("h_T = 0  (%)"); ax.set_ylim(0, 100)
 
 plt.savefig("results/relu_vs_tanh_rnn.png", dpi=200, bbox_inches="tight")
